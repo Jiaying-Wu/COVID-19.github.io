@@ -1,0 +1,155 @@
+---
+title: "Coronavirus Disease (COVID-19) Outbreak Situation"
+author: Jiaying Wu
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(plotly)
+library(ggthemes)
+library(knitr)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Heat Map of COVID-19 Confirmed Cases
+
+```{r country_code}
+# get country code
+code <- read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv') %>%
+  select(COUNTRY, CODE) %>%
+  rename(Region = COUNTRY,
+         Code = CODE) %>%
+  rownames_to_column("id")
+code$id <- as.integer(code$id)
+```
+
+```{r case_cum_country}
+# aggerate daily case summary in region level
+case_cum <- read_csv("novel-corona-virus-2019-dataset/covid_19_data.csv") %>%
+  select(ObservationDate, `Country/Region`, Confirmed, Deaths, Recovered) %>%
+  rename(Region = `Country/Region`,
+         Date = ObservationDate) %>%
+  group_by(Date, Region) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths),
+            Recovered = sum(Recovered)) %>%
+  ungroup()
+```
+
+```{r unique_region}
+# extract unique region name
+unique_region <- tibble("Region" = unique(case_cum$Region))
+```
+
+```{r replace_region_name}
+# Rename the unmatched region name in code
+code$Region <- code$Region %>%
+  str_replace(pattern = "China", replacement = "Mainland China") %>%
+  str_replace(pattern = "Korea, South", replacement = "South Korea") %>%
+  str_replace(pattern = "United States", replacement = "US") %>%
+  #str_replace(pattern = "", replacement = "Ivory Coast") %>%
+  str_replace(pattern = "United Kingdom", replacement = "UK") %>%
+  str_replace(pattern = "Macedonia", replacement = "North Macedonia")
+  #str_replace(pattern = "", replacement = "Saint Barthelemy") %>%
+```
+
+```{r }
+# recent cumulatived case and join daily case summary with code name
+recent_case_cum <- case_cum %>%
+  group_by(Region) %>%
+  summarise(
+    Date = last(Date),
+    Confirmed = last(Confirmed),
+    Deaths = last(Deaths),
+    Recovered = last(Recovered)
+  ) %>%
+  left_join(code, by = "Region") %>%
+  arrange(desc(Confirmed))
+```
+
+```{r set_map}
+#Set country boundaries as light grey
+line <- list(color = toRGB("#d1d1d1"), width = 0.2)
+
+#Specify map projection and options
+geo <- list(
+     showframe = FALSE,
+     showcoastlines = FALSE,
+     projection = list(type = 'orthographic'),
+     resolution = '100',
+     showcountries = TRUE,
+     countrycolor = '#d1d1d1',
+     showocean = TRUE,
+     oceancolor = '#064273',
+     showlakes = TRUE,
+     lakecolor = '#99c0db',
+     showrivers = TRUE,
+     rivercolor = '#99c0db')
+```
+
+```{r map_3d}
+confirm_map_3d <- plotly::plot_geo() %>%
+  layout(geo = geo) %>%
+  add_trace(data = recent_case_cum,
+            z = ~Confirmed, 
+            color = ~Confirmed, 
+            colors = 'Reds',
+            text = ~Region,
+            locations = ~Code, 
+            marker = list(line = line)) %>%
+  colorbar(title = 'confirmed case')
+confirm_map_3d
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### COVID-19 Cumulative Cases Bar Chart
+
+```{r barchart_cum}
+barchart <- case_cum %>%
+  group_by(Date) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths),
+            Recovered = sum(Recovered)) %>%
+  mutate(Date = lubridate::mdy(Date)) %>%
+  pivot_longer(cols = -c("Date", "Confirmed"), names_to = "Status", values_to = "Cases") %>%
+  ggplot(aes(x = Date)) +
+  geom_bar(aes(y = Confirmed), position = "stack", stat = "identity", fill = "#ff5050") +
+  geom_bar(aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
+  scale_fill_manual(values = c("#000000", "#009900"))+
+  theme_solarized(base_size = 10, light = TRUE)+
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "White"),
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank())
+
+ggplotly(barchart) %>% 
+  layout(legend = list(orientation = 'h'))
+```
+
+### COVID-19 Outbreak Situation
+
+```{r}
+kable(recent_case_cum %>%
+        summarise(Date = max(Date),
+                  Confirmed = sum(Confirmed),
+                  Deaths = sum(Deaths),
+                  Recovered = sum(Recovered)))
+```
+
+##### Situation Across Region
+
+```{r kable_case}
+kable(recent_case_cum[,1:5])
+```
