@@ -1,0 +1,16 @@
+---
+output: github_document
+---
+
+```{r setup, include = FALSE}
+# The README markdown generate by this rmd file, please edit the content within this R markdown.
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  message = FALSE,
+  #fig.path = "image/",
+  #fig.align = "center",
+  echo = FALSE
+)
+```
+
+# Coronavirus Disease (COVID-19) Outbreak Situation
