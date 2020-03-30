@@ -115,23 +115,25 @@ Column {data-width=350}
 ### COVID-19 Cumulative Cases Bar Chart
 
 ```{r barchart_cum}
-barchart <- case_cum %>%
+case_day_summary <- case_cum %>%
   group_by(Date) %>%
   summarise(Confirmed = sum(Confirmed),
             Deaths = sum(Deaths),
             Recovered = sum(Recovered)) %>%
-  mutate(Date = lubridate::mdy(Date)) %>%
-  pivot_longer(cols = -c("Date", "Confirmed"), names_to = "Status", values_to = "Cases") %>%
-  ggplot(aes(x = Date)) +
+  mutate(Date = lubridate::mdy(Date))
+case_long <- case_day_summary %>% 
+    select(-Confirmed) %>%
+    pivot_longer(cols = -Date, names_to = "Status", values_to = "Cases")
+barchart <- ggplot(data = case_day_summary, aes(x = Date)) +
   geom_bar(aes(y = Confirmed), position = "stack", stat = "identity", fill = "#ff5050") +
-  geom_bar(aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
+  geom_bar(data = case_long, aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
   scale_fill_manual(values = c("#000000", "#009900"))+
   theme_solarized(base_size = 10, light = TRUE)+
   theme(plot.margin = margin(0, 0, 0, 0, "pt"),
         panel.background = element_rect(fill = "White"),
         legend.position = "bottom",
         axis.title = element_blank(),
-        axis.text.y = element_blank(),
+        axis.text = element_blank(),
         axis.ticks = element_blank())
 
 ggplotly(barchart) %>% 
