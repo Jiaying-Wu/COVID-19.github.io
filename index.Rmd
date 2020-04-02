@@ -1,10 +1,12 @@
 ---
-title: "Coronavirus Disease (COVID-19) Outbreak Situation"
+title: "Coronavirus Disease (COVID-19) Daily Report"
 author: Jiaying Wu
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
+    source_code: embed
+    theme: cerulean
 ---
 
 ```{r setup, include=FALSE}
@@ -13,14 +15,16 @@ library(lubridate)
 library(plotly)
 library(ggthemes)
 library(knitr)
-
-# data version 51
+library(DT)
 ```
 
-Column {data-width=650}
+World
+=======================================================================
+
+Column {data-width=620}
 -----------------------------------------------------------------------
 
-### Heat Map of COVID-19 Confirmed Cases
+### Cumulative Confirmed Cases
 
 ```{r country_code}
 # get country code
@@ -38,6 +42,7 @@ case_cum <- read_csv("novel-corona-virus-2019-dataset/covid_19_data.csv") %>%
   select(ObservationDate, `Country/Region`, Confirmed, Deaths, Recovered) %>%
   rename(Region = `Country/Region`,
          Date = ObservationDate) %>%
+  mutate(Date = mdy(Date)) %>%
   group_by(Date, Region) %>%
   summarise(Confirmed = sum(Confirmed),
             Deaths = sum(Deaths),
@@ -62,8 +67,8 @@ code$Region <- code$Region %>%
   #str_replace(pattern = "", replacement = "Saint Barthelemy") %>%
 ```
 
-```{r }
-# recent cumulatived case and join daily case summary with code name
+```{r recent_case_cumulative}
+# recent cumulative case and join daily case summary with code name
 recent_case_cum <- case_cum %>%
   group_by(Region) %>%
   summarise(
@@ -93,12 +98,15 @@ geo <- list(
      showlakes = TRUE,
      lakecolor = '#99c0db',
      showrivers = TRUE,
-     rivercolor = '#99c0db')
+     rivercolor = '#99c0db',
+     bgcolor = '#e8f7fc')
+
 ```
 
-```{r map_3d}
-confirm_map_3d <- plotly::plot_geo() %>%
-  layout(geo = geo) %>%
+```{r confirm_map_3d}
+confirm_map_3d <- plot_geo() %>%
+  layout(geo = geo,
+         paper_bgcolor = '#e8f7fc') %>%
   add_trace(data = recent_case_cum,
             z = ~Confirmed, 
             color = ~Confirmed, 
@@ -106,13 +114,39 @@ confirm_map_3d <- plotly::plot_geo() %>%
             text = ~Region,
             locations = ~Code, 
             marker = list(line = line)) %>%
-  colorbar(title = 'confirmed case')
+  colorbar(title = 'Confirmed cases')
+
 confirm_map_3d
 ```
 
-
-Column {data-width=350}
+Column {data-width=380}
 -----------------------------------------------------------------------
+
+### Recent Cumulative Cases in the World
+
+```{r}
+kable(recent_case_cum %>%
+        summarise(Date = max(Date),
+                  Confirmed = sum(Confirmed),
+                  Deaths = sum(Deaths),
+                  Recovered = sum(Recovered)))
+```
+
+##### Recent Cumulative Cases in Region
+
+```{r table_case}
+recent_case_cum %>%
+  select(Region, Date, Confirmed, Recovered, Deaths) %>%
+  datatable(
+    rownames = FALSE,
+    fillContainer = FALSE,
+    options = list(
+      bPaginate = TRUE)
+  )
+```
+
+Trend
+=======================================================================
 
 ### COVID-19 Cumulative Cases Bar Chart
 
@@ -121,8 +155,7 @@ case_day_summary <- case_cum %>%
   group_by(Date) %>%
   summarise(Confirmed = sum(Confirmed),
             Deaths = sum(Deaths),
-            Recovered = sum(Recovered)) %>%
-  mutate(Date = lubridate::mdy(Date))
+            Recovered = sum(Recovered))
 case_long <- case_day_summary %>% 
     select(-Confirmed) %>%
     pivot_longer(cols = -Date, names_to = "Status", values_to = "Cases")
@@ -135,25 +168,9 @@ barchart <- ggplot(data = case_day_summary, aes(x = Date)) +
         panel.background = element_rect(fill = "White"),
         legend.position = "bottom",
         axis.title = element_blank(),
-        axis.text = element_blank(),
+        #axis.text.x = element_blank(),
         axis.ticks = element_blank())
 
 ggplotly(barchart) %>% 
   layout(legend = list(orientation = 'h'))
-```
-
-### COVID-19 Outbreak Situation
-
-```{r}
-kable(recent_case_cum %>%
-        summarise(Date = max(Date),
-                  Confirmed = sum(Confirmed),
-                  Deaths = sum(Deaths),
-                  Recovered = sum(Recovered)))
-```
-
-##### Situation Across Region
-
-```{r kable_case}
-kable(recent_case_cum[,1:5])
 ```
