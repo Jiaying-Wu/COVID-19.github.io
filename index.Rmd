@@ -174,3 +174,6 @@ barchart <- ggplot(data = case_day_summary, aes(x = Date)) +
 ggplotly(barchart) %>% 
   layout(legend = list(orientation = 'h'))
 ```
+
+
+
