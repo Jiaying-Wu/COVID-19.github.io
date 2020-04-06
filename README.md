@@ -4,7 +4,7 @@ Coronavirus Disease (COVID-19) Outbreak Situation
 
 Link to the flex dashboard: <https://jiaying-wu.github.io/COVID-19.github.io/>
 
-This image below is the Flex dashboard in data version 53, current data version is 56.
+This image below is the Flex dashboard in data version 53, current data version is 57.
 
 ![](image/COVID19_flexdashboard_version_2.png)
 
