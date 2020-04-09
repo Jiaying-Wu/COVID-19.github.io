@@ -28,7 +28,12 @@ Column {data-width=620}
 
 ```{r country_code}
 # get country code
-code <- read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv') %>%
+code <- read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_world_gdp_with_codes.csv',
+                 col_types = cols(
+                   COUNTRY = col_character(),
+                   `GDP (BILLIONS)` = col_double(),
+                   CODE = col_character()
+                 )) %>%
   select(COUNTRY, CODE) %>%
   rename(Region = COUNTRY,
          Code = CODE) %>%
@@ -38,7 +43,17 @@ code$id <- as.integer(code$id)
 
 ```{r case_cum_country}
 # aggerate daily case summary in region level
-case_cum <- read_csv("novel-corona-virus-2019-dataset/covid_19_data.csv") %>%
+case_cum <- read_csv("novel-corona-virus-2019-dataset/covid_19_data.csv",
+                     col_types = cols(
+                       SNo = col_double(),
+                       ObservationDate = col_character(),
+                       `Province/State` = col_character(),
+                       `Country/Region` = col_character(),
+                       `Last Update` = col_character(),
+                       Confirmed = col_double(),
+                       Deaths = col_double(),
+                       Recovered = col_double()
+                     )) %>%
   select(ObservationDate, `Country/Region`, Confirmed, Deaths, Recovered) %>%
   rename(Region = `Country/Region`,
          Date = ObservationDate) %>%
@@ -119,49 +134,74 @@ confirm_map_3d <- plot_geo() %>%
 confirm_map_3d
 ```
 
-Column {data-width=380}
+Column {data-width=380 .tabset}
 -----------------------------------------------------------------------
 
-### Recent Cumulative Cases in the World
+### World level
+
+##### Recent Cumulative Cases in the World
+
+```{r time_series}
+# time series of confirmed cases in each area
+ts_confirmed <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_confirmed.csv", 
+                         col_types = cols(
+                           .default = col_double(),
+                           `Province/State` = col_character(),
+                           `Country/Region` = col_character()
+                         )) %>%
+  select(-c("Lat", "Long")) %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`), names_to = "Date", values_to = "Confirmed") %>%
+  mutate(Date = mdy(Date))
+
+# time series of recovered cases in each area
+ts_recovered <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_recovered.csv",
+                         col_types = cols(
+                           .default = col_double(),
+                           `Province/State` = col_character(),
+                           `Country/Region` = col_character()
+                         )) %>%
+  select(-c("Lat", "Long")) %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`), names_to = "Date", values_to = "Recovered") %>%
+  mutate(Date = mdy(Date))
+
+# time series of deaths cases in each area
+ts_deaths <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_deaths.csv",
+                      col_types = cols(
+                        .default = col_double(),
+                        `Province/State` = col_character(),
+                        `Country/Region` = col_character()
+                      )) %>%
+  select(-c("Lat", "Long")) %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`), names_to = "Date", values_to = "Deaths") %>%
+  mutate(Date = mdy(Date))
+
+# time series of 3 cases in each area
+ts_all <- ts_confirmed %>%
+  left_join(ts_recovered, by = c("Province/State", "Country/Region", "Date")) %>%
+  mutate(Recovered = replace_na(Recovered, replace = 0)) %>%
+  left_join(ts_deaths, by = c("Province/State", "Country/Region", "Date"))
+```
 
 ```{r}
-kable(recent_case_cum %>%
-        summarise(Date = max(Date),
-                  Confirmed = sum(Confirmed),
-                  Deaths = sum(Deaths),
-                  Recovered = sum(Recovered)))
-```
-
-##### Recent Cumulative Cases in Region
-
-```{r table_case}
-recent_case_cum %>%
-  select(Region, Date, Confirmed, Recovered, Deaths) %>%
-  datatable(
-    rownames = FALSE,
-    fillContainer = FALSE,
-    options = list(
-      bPaginate = TRUE)
-  )
-```
-
-Trend
-=======================================================================
-
-### COVID-19 Cumulative Cases Bar Chart
-
-```{r barchart_cum}
-case_day_summary <- case_cum %>%
+# aggregate in date level
+ts_all_date <- ts_all %>%
+  rename(Region = `Country/Region`) %>%
   group_by(Date) %>%
   summarise(Confirmed = sum(Confirmed),
             Deaths = sum(Deaths),
             Recovered = sum(Recovered))
-case_long <- case_day_summary %>% 
+
+kable(ts_all_date %>%
+        filter(Date == max(Date)))
+```
+
+```{r barchart_cum}
+ts_date_long <- ts_all_date %>% 
     select(-Confirmed) %>%
     pivot_longer(cols = -Date, names_to = "Status", values_to = "Cases")
-barchart <- ggplot(data = case_day_summary, aes(x = Date)) +
+barchart <- ggplot(data = ts_all_date, aes(x = Date)) +
   geom_bar(aes(y = Confirmed), position = "stack", stat = "identity", fill = "#ff5050") +
-  geom_bar(data = case_long, aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
+  geom_bar(data = ts_date_long, aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
   scale_fill_manual(values = c("#000000", "#009900"))+
   theme_solarized(base_size = 10, light = TRUE)+
   theme(plot.margin = margin(0, 0, 0, 0, "pt"),
@@ -169,11 +209,65 @@ barchart <- ggplot(data = case_day_summary, aes(x = Date)) +
         legend.position = "bottom",
         axis.title = element_blank(),
         #axis.text.x = element_blank(),
-        axis.ticks = element_blank())
+        axis.ticks = element_blank()) +
+  ggtitle("COVID-19 Daily Cumulative Cases Bar Chart")
 
 ggplotly(barchart) %>% 
   layout(legend = list(orientation = 'h'))
 ```
+
+
+### Region level
+
+Recent Cumulative Cases in Each Region
+
+```{r table_case}
+ts_all %>%
+  rename(Region = `Country/Region`) %>%
+  group_by(Region, Date) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths),
+            Recovered = sum(Recovered)) %>%
+  filter(Date == max(Date)) %>%
+  arrange(desc(Confirmed)) %>%
+  datatable(
+    rownames = FALSE,
+    fillContainer = TRUE,
+    options = list(
+      bPaginate = FALSE)
+  )
+```
+
+Australia
+=======================================================================
+
+### Chart 1
+    
+```{r}
+```
+
+
+
+Recovered
+=======================================================================
+
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+
+```
+ 
+Column
+-------------------------------------
+    
+### Chart 1
+    
+```{r}
+```
+    
+
+
 
 
 
