@@ -16,6 +16,11 @@ library(plotly)
 library(ggthemes)
 library(knitr)
 library(DT)
+library(rmapshaper)
+library(sugarbag)
+library(gganimate)
+library(ggrepel)
+library(brotools)
 ```
 
 World
@@ -149,8 +154,7 @@ ts_confirmed <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_c
                            `Province/State` = col_character(),
                            `Country/Region` = col_character()
                          )) %>%
-  select(-c("Lat", "Long")) %>%
-  pivot_longer(cols = -c(`Province/State`, `Country/Region`), names_to = "Date", values_to = "Confirmed") %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), names_to = "Date", values_to = "Confirmed") %>%
   mutate(Date = mdy(Date))
 
 # time series of recovered cases in each area
@@ -160,8 +164,7 @@ ts_recovered <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_r
                            `Province/State` = col_character(),
                            `Country/Region` = col_character()
                          )) %>%
-  select(-c("Lat", "Long")) %>%
-  pivot_longer(cols = -c(`Province/State`, `Country/Region`), names_to = "Date", values_to = "Recovered") %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), names_to = "Date", values_to = "Recovered") %>%
   mutate(Date = mdy(Date))
 
 # time series of deaths cases in each area
@@ -171,18 +174,18 @@ ts_deaths <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_deat
                         `Province/State` = col_character(),
                         `Country/Region` = col_character()
                       )) %>%
-  select(-c("Lat", "Long")) %>%
-  pivot_longer(cols = -c(`Province/State`, `Country/Region`), names_to = "Date", values_to = "Deaths") %>%
+  pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), names_to = "Date", values_to = "Deaths") %>%
   mutate(Date = mdy(Date))
 
 # time series of 3 cases in each area
 ts_all <- ts_confirmed %>%
-  left_join(ts_recovered, by = c("Province/State", "Country/Region", "Date")) %>%
+  left_join(ts_recovered) %>%
   mutate(Recovered = replace_na(Recovered, replace = 0)) %>%
-  left_join(ts_deaths, by = c("Province/State", "Country/Region", "Date"))
+  left_join(ts_deaths) %>%
+  mutate(Deaths = replace_na(Deaths, replace = 0))
 ```
 
-```{r}
+```{r total_summary_cases}
 # aggregate in date level
 ts_all_date <- ts_all %>%
   rename(Region = `Country/Region`) %>%
@@ -208,7 +211,7 @@ barchart <- ggplot(data = ts_all_date, aes(x = Date)) +
         panel.background = element_rect(fill = "White"),
         legend.position = "bottom",
         axis.title = element_blank(),
-        #axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
         axis.ticks = element_blank()) +
   ggtitle("COVID-19 Daily Cumulative Cases Bar Chart")
 
@@ -216,13 +219,13 @@ ggplotly(barchart) %>%
   layout(legend = list(orientation = 'h'))
 ```
 
-
 ### Region level
 
 Recent Cumulative Cases in Each Region
 
 ```{r table_case}
 ts_all %>%
+  select(-c(Lat, Long)) %>%
   rename(Region = `Country/Region`) %>%
   group_by(Region, Date) %>%
   summarise(Confirmed = sum(Confirmed),
@@ -237,4 +240,193 @@ ts_all %>%
       bPaginate = FALSE)
   )
 ```
+
+
+Australia
+=======================================================================
+    
+```{r map_aus_ts_recent}
+ts_aus <- ts_all %>%
+  filter(`Country/Region` == "Australia") %>%
+  rename(State = `Province/State`,
+         Country = `Country/Region`)
+
+aus_map <- read_rds(gzcon(url("https://biogeo.ucdavis.edu/data/gadm3.6/Rsf/gadm36_AUS_1_sf.rds"))) %>%
+  ms_simplify(keep = 0.01, keep_shapes = TRUE) %>%
+  fortify_sfc() %>%
+  filter(NAME_1 != "Ashmore and Cartier Islands" & 
+           NAME_1 != "Coral Sea Islands Territory" &
+           NAME_1 != "Jervis Bay Territory") %>%
+  select(NAME_1, polygon, long, lat) %>%
+  rename(State = NAME_1)
+
+aus_map_recent <- aus_map %>%
+  left_join(ts_aus %>% filter(Date == max(Date)), by = "State") %>%
+  select(-Country)
+```
+
+Column {data-width=500 .tabset}
+-----------------------------------------------------------------------
+
+### Map of Confirmed Cases
+
+```{r map_aus_confirmed}
+ggplot() +
+  geom_polygon(data = aus_map_recent,
+               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Confirmed), 
+               color = "grey") +
+  geom_text() +
+  theme_map() +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "lightblue"),
+        legend.position = c(0.65, 0.05),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "lightblue")) +
+  ggtitle("Recent Cumulative Confirmed Cases in Australia") +
+  geom_text(data = aus_map_recent, 
+            mapping = aes(x = Long,y = Lat, label = paste(State,":",Confirmed)), 
+            size = 2)
+```
+
+### Map of Recovered Cases
+
+```{r map_aus_recovered}
+ggplot() +
+  geom_polygon(data = aus_map_recent, 
+               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Recovered), 
+               color = "grey") +
+  theme_map() +
+  scale_fill_distiller(palette = "Greens", direction = 1) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "lightblue"),
+        legend.position = c(0.65, 0.05),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "lightblue")) +
+  ggtitle("Recent Cumulative Recovered Cases in Australia") +
+  geom_text(data = aus_map_recent, 
+            mapping = aes(x = Long,y = Lat, label = paste(State,":",Recovered)), 
+            size = 2)
+```
+
+### Map of Deaths Cases
+
+```{r map_aus_deaths}
+ggplot() +
+  geom_polygon(data = aus_map_recent, 
+               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Deaths), 
+               color = "grey") +
+  theme_map() +
+  scale_fill_distiller(palette = "Purples", direction = 1) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "lightblue"),
+        legend.position = c(0.65, 0.05),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "lightblue")) +
+  ggtitle("Recent Cumulative Deaths Cases in Australia") +
+  geom_text(data = aus_map_recent, 
+            mapping = aes(x = Long,y = Lat, label = paste(State,":",Deaths)), 
+            size = 2)
+```
+
+
+Column {data-width=500 .tabset}
+-----------------------------------------------------------------------
+
+### Animation of Confirmed Cases
+
+```{r ts_aus_nz}
+state_code <- tibble(
+  "name" = c("Australian Capital Territory", "New South Wales", "Northern Territory", "Queensland", "South Australia","Tasmania", "Victoria","Western Australia"),
+  "State" = as.factor(c("ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA")))
+
+# filter by the first confirmed case appeareds
+ts_aus_nz <- ts_aus %>%
+  rename(name = State) %>%
+  filter(Confirmed > 0) %>%
+  left_join(state_code)
+```
+
+```{r animate_confirmed, eval=FALSE}
+animate_confirmed <- 
+  ggplot(data = ts_aus_nz, 
+         mapping = aes(x = Date, y = Confirmed, group = State, color = State)) +
+  geom_line() +
+  scale_color_brewer(palette = "Set3") +
+  scale_y_log10() +
+  geom_segment(aes(xend = max(Date)+1, yend = Confirmed), linetype = 2, colour = 'grey') +
+  geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
+  theme_blog() +
+  coord_cartesian(clip = 'off') +
+  theme(legend.position = "none", axis.title.x = element_blank()) +
+  guides(size = FALSE) + 
+  geom_point(aes(size = Confirmed), alpha = 0.7) +
+  scale_size(range = c(2, 10)) +
+  transition_reveal(Date) +
+  labs(title = 'Cumulative Confirmed Cases at Date: {frame_along}', ylab = "Confirmed Cases")
+
+anim_save("image/animate_confirmed.gif", 
+          animation = animate(animate_confirmed, nframes = 200, fps = 10, end_pause = 50))
+```
+
+![](image/animate_confirmed.gif)
+
+### Animation of Recovered Cases
+
+```{r animate_recovered, eval=FALSE}
+animate_recovered <- 
+  ggplot(data = ts_aus_nz, 
+         mapping = aes(x = Date, y = Recovered, group = State, color = State)) +
+  geom_line() +
+  scale_color_brewer(palette = "Set3") +
+  scale_y_log10() +
+  geom_segment(aes(xend = max(Date)+1, yend = Recovered), linetype = 2, colour = 'grey') +
+  geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
+  theme_blog() +
+  coord_cartesian(clip = 'off') +
+  theme(legend.position = "none", axis.title.x = element_blank()) +
+  guides(size = FALSE) + 
+  geom_point(aes(size = Recovered), alpha = 0.7) +
+  scale_size(range = c(2, 10)) +
+  transition_reveal(Date) +
+  labs(title = 'Cumulative Recovered Cases at Date: {frame_along}', ylab = "Recovered Cases")
+
+anim_save("image/animate_recovered.gif", 
+          animation = animate(animate_recovered, nframes = 200, fps = 10, end_pause = 50))
+```
+
+![](image/animate_recovered.gif)
+
+### Animation of Deaths Cases
+
+```{r animate_deaths, eval=FALSE}
+animate_deaths <- 
+  ggplot(data = ts_aus_nz, 
+         mapping = aes(x = Date, y = Deaths, group = State, color = State)) +
+  geom_line() +
+  scale_color_brewer(palette = "Set3") +
+  scale_y_log10() +
+  geom_segment(aes(xend = max(Date)+1, yend = Deaths), linetype = 2, colour = 'grey') +
+  geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
+  theme_blog() +
+  coord_cartesian(clip = 'off') +
+  theme(legend.position = "none", axis.title.x = element_blank()) +
+  guides(size = FALSE) + 
+  geom_point(aes(size = Deaths), alpha = 0.7) +
+  scale_size(range = c(2, 10)) +
+  transition_reveal(Date) +
+  labs(title = 'Cumulative Deaths Cases at Date: {frame_along}', ylab = "Deaths Cases")
+
+anim_save("image/animate_deaths.gif", 
+          animation = animate(animate_deaths, nframes = 200, fps = 10, end_pause = 50))
+```
+
+![](image/animate_deaths.gif)
+
+
+    
+
+
+
+
 

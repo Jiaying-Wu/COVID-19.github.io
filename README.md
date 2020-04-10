@@ -1,12 +1,23 @@
 
-Coronavirus Disease (COVID-19) Outbreak Situation
-=================================================
+Flex Dashboard for COVID-19 Outbreak Situation
+==============================================
 
 Link to the flex dashboard: <https://jiaying-wu.github.io/COVID-19.github.io/>
 
-This image below is the Flex dashboard in data version 53, current data version is 60.
+Key Features
+------------
 
-![](image/COVID19_flexdashboard_version_2.png)
+### 3D Interactive Cumulative Cases World Map
+
+![](image/3d_world_map.png)
+
+### Animation of Cumulative Cases Curves
+
+![](image/animate_confirmed.gif)
+
+### 2D Cumulative Cases Heat Map
+
+![](image/2d_aus_map.png)
 
 Data File
 ---------
