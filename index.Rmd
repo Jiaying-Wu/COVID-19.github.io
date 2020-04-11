@@ -19,7 +19,6 @@ library(DT)
 library(rmapshaper)
 library(sugarbag)
 library(gganimate)
-library(ggrepel)
 library(brotools)
 ```
 
@@ -347,7 +346,7 @@ ts_aus_nz <- ts_aus %>%
   left_join(state_code)
 ```
 
-```{r animate_confirmed, eval=FALSE}
+```{r animate_confirmed}
 animate_confirmed <- 
   ggplot(data = ts_aus_nz, 
          mapping = aes(x = Date, y = Confirmed, group = State, color = State)) +
@@ -365,15 +364,14 @@ animate_confirmed <-
   transition_reveal(Date) +
   labs(title = 'Cumulative Confirmed Cases at Date: {frame_along}')
 
-anim_save("image/animate_confirmed.gif", 
-          animation = animate(animate_confirmed, nframes = 200, fps = 10, end_pause = 50))
+#anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_confirmed.gif)
 
 ### Animation of Recovered Cases
 
-```{r animate_recovered, eval=FALSE}
+```{r animate_recovered}
 animate_recovered <- 
   ggplot(data = ts_aus_nz, 
          mapping = aes(x = Date, y = Recovered, group = State, color = State)) +
@@ -391,15 +389,14 @@ animate_recovered <-
   transition_reveal(Date) +
   labs(title = 'Cumulative Recovered Cases at Date: {frame_along}')
 
-anim_save("image/animate_recovered.gif", 
-          animation = animate(animate_recovered, nframes = 200, fps = 10, end_pause = 50))
+#anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_recovered.gif)
 
 ### Animation of Deaths Cases
 
-```{r animate_deaths, eval=FALSE}
+```{r animate_deaths}
 animate_deaths <- 
   ggplot(data = ts_aus_nz, 
          mapping = aes(x = Date, y = Deaths, group = State, color = State)) +
@@ -417,8 +414,7 @@ animate_deaths <-
   transition_reveal(Date) +
   labs(title = 'Cumulative Deaths Cases at Date: {frame_along}')
 
-anim_save("image/animate_deaths.gif", 
-          animation = animate(animate_deaths, nframes = 200, fps = 10, end_pause = 50))
+#anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_deaths.gif)
