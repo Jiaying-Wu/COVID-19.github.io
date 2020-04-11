@@ -1,5 +1,5 @@
 ---
-title: "Coronavirus Disease (COVID-19) Report"
+title: "Coronavirus Disease (COVID-19) Dashboard"
 author: Jiaying Wu
 output: 
   flexdashboard::flex_dashboard:
@@ -7,9 +7,11 @@ output:
     vertical_layout: fill
     source_code: embed
     theme: cerulean
+    social: [ "twitter", "facebook", "linkedin", "menu" ]
 ---
 
 ```{r setup, include=FALSE}
+library(flexdashboard)
 library(tidyverse)
 library(lubridate)
 library(plotly)
@@ -25,7 +27,7 @@ library(brotools)
 Summary
 =======================================================================
 
-Column {data-width=620}
+Column {data-width=600 .tabset}
 -----------------------------------------------------------------------
 
 ### Confirmed Cases in Regions
@@ -135,12 +137,6 @@ confirm_map_3d <- plot_geo() %>%
 confirm_map_3d
 ```
 
-
-Column {data-width=400 .tabset}
------------------------------------------------------------------------
-
-### World
-
 ```{r time_series}
 # time series of confirmed cases in each area
 ts_confirmed <- read_csv("novel-corona-virus-2019-dataset/time_series_covid_19_confirmed.csv", 
@@ -180,19 +176,6 @@ ts_all <- ts_confirmed %>%
   mutate(Deaths = replace_na(Deaths, replace = 0))
 ```
 
-```{r total_summary_cases}
-# aggregate in date level
-ts_all_date <- ts_all %>%
-  rename(Region = `Country/Region`) %>%
-  group_by(Date) %>%
-  summarise(Confirmed = sum(Confirmed),
-            Deaths = sum(Deaths),
-            Recovered = sum(Recovered))
-
-kable(ts_all_date %>%
-        filter(Date == max(Date)))
-```
-
 ### Search by Region
 
 ```{r table_case}
@@ -213,7 +196,61 @@ ts_all %>%
   )
 ```
 
-Increment
+Column {data-width=400 .bg-secondary}
+-----------------------------------------------------------------------
+
+```{r total_summary_cases}
+# aggregate in date level
+ts_all_date <- ts_all %>%
+  rename(Region = `Country/Region`) %>%
+  group_by(Date) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths),
+            Recovered = sum(Recovered))
+ts_recent <- ts_all_date %>%
+  filter(Date == max(Date))
+```
+
+### `r paste0("Confirmed Cases at ", ts_recent$Date)` 
+
+```{r total_confirmed}
+valueBox(prettyNum(ts_recent$Confirmed, big.mark = ","), icon = "fa-users", color = "danger")
+```
+
+### `r paste0("Recovered Cases at ", ts_recent$Date)` 
+
+```{r total_recovered}
+valueBox(prettyNum(ts_recent$Recovered, big.mark = ","), icon = "ion-checkmark-circled", color = '#00ff00')
+```
+
+### `r paste0("Deaths Cases at ", ts_recent$Date)` 
+
+```{r total_deaths}
+valueBox(prettyNum(ts_recent$Deaths, big.mark = ","), icon = "ion-close-circled", color = '#d3d3d3')
+```
+
+### `r paste0("Affected Country/Region at ", ts_recent$Date)` 
+
+```{r affect_region}
+affect_region <- NROW(recent_case_cum %>% filter(Confirmed > 0))
+valueBox(prettyNum(affect_region, big.mark = ","), icon = "ion-android-globe", color = "warning")
+```
+
+```{r first_case_day}
+case_nz <- case_cum %>% filter(Confirmed>0)
+first_case_day <- min(case_nz$Date)
+```
+
+### `r paste0("Days since First Case Confirmed at ", first_case_day)` 
+
+```{r pass_day}
+current <- Sys.Date()
+pass_day <- current - first_case_day
+valueBox(prettyNum(pass_day, big.mark = ","), icon = "ion-android-time", color = '#1ac6ff')
+```
+
+
+World
 =======================================================================
 
 Column {data-width=500}
@@ -229,7 +266,7 @@ barchart <- ggplot(data = ts_all_date, aes(x = Date)) +
   geom_bar(aes(y = Confirmed), position = "stack", stat = "identity", fill = "#ff5050") +
   geom_bar(data = ts_date_long, aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
   scale_fill_manual(values = c("#000000", "#009900")) +
-  scale_y_continuous(labels = scales::label_number_si()) +
+  scale_y_continuous(labels = scales::label_number_si(accuracy = 0.1)) +
   theme_solarized(base_size = 10, light = TRUE)+
   theme(plot.margin = margin(0, 0, 0, 0, "pt"),
         panel.background = element_rect(fill = "White"),
