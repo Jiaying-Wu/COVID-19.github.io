@@ -31,6 +31,6 @@ Data Source
 
 1.The COVID-19 data is from John Hopkins University, <https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data/csse_covid_19_time_series>.
 
-2.The Australia map data if from GADM, <https://gadm.org/data.html>
+2.The Australia map data is from GADM, <https://gadm.org/data.html>
 
 3.The country code is from plotly dataset, <https://github.com/plotly/datasets/blob/master/2014_world_gdp_with_codes.csv>
