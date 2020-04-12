@@ -287,7 +287,7 @@ animate_world_increment <-
   geom_point(aes(size = Increment), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
-  labs(title = 'Case Increment at Date: {frame_along}')
+  labs(title = 'World Case Increment at Date: {frame_along}')
 
 #anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 200, fps = 10, end_pause = 50))
 ```
