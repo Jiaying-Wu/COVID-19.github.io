@@ -546,7 +546,7 @@ animate_confirmed <-
   geom_point(aes(size = Confirmed), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
-  labs(title = 'AUS Cumulative Confirmed Cases at Date: {frame_along}')
+  labs(title = 'AUS COVID-19 Confirmed Cases at Date: {frame_along}')
 
 anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 150, fps = 10, end_pause = 50))
 ```
@@ -573,7 +573,7 @@ animate_recovered <-
   geom_point(aes(size = Recovered), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
-  labs(title = 'AUS Cumulative Recovered Cases at Date: {frame_along}')
+  labs(title = 'AUS COVID-19 Recovered Cases at Date: {frame_along}')
 
 anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 150, fps = 10, end_pause = 50))
 ```
@@ -599,7 +599,7 @@ animate_deaths <-
   geom_point(aes(size = Deaths), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
-  labs(title = 'AUS Cumulative Deaths Cases at Date: {frame_along}')
+  labs(title = 'AUS COVID-19 Deaths Cases at Date: {frame_along}')
 
 anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 150, fps = 10, end_pause = 50))
 ```
