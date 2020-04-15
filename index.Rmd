@@ -7,7 +7,7 @@ output:
     vertical_layout: fill
     source_code: embed
     theme: cerulean
-    social: [ "twitter", "facebook", "linkedin", "menu" ]
+    social: [ "twitter", "facebook", "menu" ]
 ---
 
 ```{r setup, include=FALSE}
@@ -24,13 +24,8 @@ library(gganimate)
 library(brotools)
 ```
 
-Summary
+World
 =======================================================================
-
-Column {data-width=600 .tabset}
------------------------------------------------------------------------
-
-### Confirmed Cases in Regions
 
 ```{r time_series}
 # time series of confirmed cases in each area
@@ -80,6 +75,24 @@ region_recent <- ts_all %>%
   summarise(Confirmed = sum(Confirmed),
             Recovered = sum(Recovered),
             Deaths = sum(Deaths))
+
+recent_day <- max(region_recent$Date)
+```
+
+Column {data-width=400 .bg-secondary}
+-----------------------------------------------------------------------
+
+```{r total_summary_cases}
+# aggregate in date level
+ts_all_date <- ts_all %>%
+  rename(Region = `Country/Region`) %>%
+  group_by(Date) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths),
+            Recovered = sum(Recovered))
+
+ts_recent <- ts_all_date %>%
+  filter(Date == max(Date))
 ```
 
 ```{r country_code}
@@ -124,72 +137,6 @@ region_recent_code <- region_recent %>%
   arrange(desc(Confirmed))
 ```
 
-```{r set_map}
-#Set country boundaries as light grey
-line <- list(color = toRGB("#d1d1d1"), width = 0.2)
-
-#Specify map projection and options
-geo <- list(
-     showframe = FALSE,
-     showcoastlines = FALSE,
-     projection = list(type = 'orthographic'),
-     resolution = '100',
-     showcountries = TRUE,
-     countrycolor = '#d1d1d1',
-     showocean = TRUE,
-     oceancolor = '#064273',
-     showlakes = TRUE,
-     lakecolor = '#99c0db',
-     showrivers = TRUE,
-     rivercolor = '#99c0db',
-     bgcolor = '#e8f7fc')
-
-```
-
-```{r confirm_map_3d}
-confirm_map_3d <- plot_geo() %>%
-  layout(geo = geo,
-         paper_bgcolor = '#e8f7fc') %>%
-  add_trace(data = region_recent_code,
-            z = ~Confirmed, 
-            color = ~Confirmed, 
-            colors = 'Reds',
-            text = ~`Country/Region`,
-            locations = ~Code, 
-            marker = list(line = line))
-
-confirm_map_3d
-```
-
-### Search by Region
-
-```{r table_case}
-region_recent_code %>%
-  select(`Country/Region`,Code, Date, Confirmed, Recovered, Deaths) %>%
-  arrange(desc(Confirmed)) %>%
-  datatable(
-    rownames = FALSE,
-    fillContainer = TRUE,
-    options = list(
-      bPaginate = FALSE)
-  )
-```
-
-Column {data-width=400 .bg-secondary}
------------------------------------------------------------------------
-
-```{r total_summary_cases}
-# aggregate in date level
-ts_all_date <- ts_all %>%
-  rename(Region = `Country/Region`) %>%
-  group_by(Date) %>%
-  summarise(Confirmed = sum(Confirmed),
-            Deaths = sum(Deaths),
-            Recovered = sum(Recovered))
-ts_recent <- ts_all_date %>%
-  filter(Date == max(Date))
-```
-
 ### `r paste0("Confirmed Cases at ", ts_recent$Date)` 
 
 ```{r total_confirmed}
@@ -220,7 +167,7 @@ case_nz <- ts_all %>% filter(Confirmed>0)
 first_case_day <- min(case_nz$Date)
 ```
 
-### `r paste0("Days since First Case Confirmed at ", first_case_day)` 
+### `r paste0("Days since First Confirmed Case at ", first_case_day)` 
 
 ```{r pass_day}
 current <- Sys.Date()
@@ -228,14 +175,71 @@ pass_day <- current - first_case_day
 valueBox(prettyNum(pass_day, big.mark = ","), icon = "ion-android-time", color = '#FFC300')
 ```
 
+Column {data-width=600 .tabset}
+-----------------------------------------------------------------------
 
-World
+### World COVID-19 Confirmed Cases by Region
+
+```{r set_map}
+#Set country boundaries as light grey
+line <- list(color = toRGB("#d1d1d1"), width = 0.2)
+
+#Specify map projection and options
+geo <- list(
+     showframe = FALSE,
+     showcoastlines = FALSE,
+     projection = list(type = 'orthographic'),
+     resolution = '100',
+     showcountries = TRUE,
+     countrycolor = '#d1d1d1',
+     showocean = TRUE,
+     oceancolor = '#064273',
+     showlakes = TRUE,
+     lakecolor = '#99c0db',
+     showrivers = TRUE,
+     rivercolor = '#99c0db',
+     bgcolor = '#e8f7fc')
+
+```
+
+```{r confirm_map_3d}
+confirm_map_3d <- plot_geo() %>%
+  layout(geo = geo,
+         paper_bgcolor = '#e8f7fc',
+         title = paste0("World COVID-19 Confirmed Cases by Region at ", recent_day)) %>%
+  add_trace(data = region_recent_code,
+            z = ~Confirmed, 
+            color = ~Confirmed, 
+            colors = 'Reds',
+            text = ~`Country/Region`,
+            locations = ~Code, 
+            marker = list(line = line))
+
+confirm_map_3d
+```
+
+### Search by Region
+
+```{r table_case}
+region_recent_code %>%
+  select(`Country/Region`,Code, Date, Confirmed, Recovered, Deaths) %>%
+  arrange(desc(Confirmed)) %>%
+  datatable(
+    rownames = FALSE,
+    fillContainer = TRUE,
+    options = list(
+      bPaginate = FALSE)
+  )
+```
+
+
+Daily
 =======================================================================
 
 Column {data-width=500}
 -----------------------------------------------------------------------
 
-### Cumulative Cases in the World
+### World COVID-19 Cumulative Cases by Day
 
 ```{r barchart_cum}
 ts_date_long <- ts_all_date %>% 
@@ -252,7 +256,8 @@ barchart <- ggplot(data = ts_all_date, aes(x = Date)) +
         legend.position = "bottom",
         axis.title = element_blank(),
         #axis.text.y = element_blank(),
-        axis.ticks = element_blank())
+        axis.ticks = element_blank()) +
+  ggtitle("World COVID-19 Cumulative Cases by Day")
 
 ggplotly(barchart) %>% 
   layout(legend = list(orientation = 'h'))
@@ -261,7 +266,7 @@ ggplotly(barchart) %>%
 Column {data-width=500}
 -----------------------------------------------------------------------
 
-### Case Increment in the World
+### Animation of World COVID-19 Case Increment by Day
 
 ```{r ts_increment}
 ts_increment_long <- ts_all_date %>%
@@ -287,7 +292,7 @@ animate_world_increment <-
   geom_point(aes(size = Increment), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
-  labs(title = 'World Case Increment at Date: {frame_along}')
+  labs(title = 'World COVID-19 Case Increment at Date: {frame_along}')
 
 anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 200, fps = 10, end_pause = 50))
 ```
@@ -297,94 +302,64 @@ anim_save("image/animate_world_increment.gif", animation = animate(animate_world
 
 Australia
 =======================================================================
-    
-```{r map_aus_ts_recent}
+
+Column {data-width=400 .bg-secondary}
+-----------------------------------------------------------------------
+
+```{r aus_recent_sum}
 ts_aus <- ts_all %>%
   filter(`Country/Region` == "Australia") %>%
   rename(State = `Province/State`,
          Country = `Country/Region`)
 
-aus_map <- read_rds(gzcon(url("https://biogeo.ucdavis.edu/data/gadm3.6/Rsf/gadm36_AUS_1_sf.rds"))) %>%
-  ms_simplify(keep = 0.01, keep_shapes = TRUE) %>%
-  fortify_sfc() %>%
-  filter(NAME_1 != "Ashmore and Cartier Islands" & 
-           NAME_1 != "Coral Sea Islands Territory" &
-           NAME_1 != "Jervis Bay Territory") %>%
-  select(NAME_1, polygon, long, lat) %>%
-  rename(State = NAME_1)
-
-aus_map_recent <- aus_map %>%
-  left_join(ts_aus %>% filter(Date == max(Date)), by = "State") %>%
-  select(-Country)
+aus_recent_sum <- ts_aus %>%
+  filter(Date == max(Date)) %>%
+  group_by(Country) %>%
+  summarise(Date = max(Date),
+            Confirmed = sum(Confirmed),
+            Recovered = sum(Recovered),
+            Deaths = sum(Deaths))
+state_recent <- ts_aus %>%
+  filter(Date == max(Date))
 ```
 
-Column {data-width=500 .tabset}
------------------------------------------------------------------------
+### `r paste0("AUS Confirmed Cases at ", aus_recent_sum$Date)` 
 
-### Map of Confirmed Cases
-
-```{r map_aus_confirmed}
-ggplot() +
-  geom_polygon(data = aus_map_recent,
-               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Confirmed), 
-               color = "grey") +
-  geom_text() +
-  theme_map() +
-  scale_fill_distiller(palette = "YlOrRd", direction = 1) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
-        panel.background = element_rect(fill = "lightblue"),
-        legend.position = c(0.26, 0.2),
-        legend.direction = "horizontal",
-        legend.background = element_rect(fill = "lightblue")) +
-  ggtitle("Recent Cumulative Confirmed Cases in Australia") +
-  geom_text(data = aus_map_recent, 
-            mapping = aes(x = Long,y = Lat, label = paste(State,":",Confirmed)), 
-            size = 2)
+```{r aus_confirmed}
+valueBox(prettyNum(aus_recent_sum$Confirmed, big.mark = ","), icon = "fa-users", color = "#C70039")
 ```
 
-### Recovered Cases
+### `r paste0("AUS Recovered Cases at ", aus_recent_sum$Date)` 
 
-```{r map_aus_recovered}
-ggplot() +
-  geom_polygon(data = aus_map_recent, 
-               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Recovered), 
-               color = "grey") +
-  theme_map() +
-  scale_fill_distiller(palette = "Greens", direction = 1) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
-        panel.background = element_rect(fill = "lightblue"),
-        legend.position = c(0.26, 0.2),
-        legend.direction = "horizontal",
-        legend.background = element_rect(fill = "lightblue")) +
-  ggtitle("Recent Cumulative Recovered Cases in Australia") +
-  geom_text(data = aus_map_recent, 
-            mapping = aes(x = Long,y = Lat, label = paste(State,":",Recovered)), 
-            size = 2)
+```{r aus_recovered}
+valueBox(prettyNum(aus_recent_sum$Recovered, big.mark = ","), icon = "ion-checkmark-circled", color = '#3FBF7F')
 ```
 
-### Deaths Cases
+### `r paste0("AUS Deaths Cases at ", aus_recent_sum$Date)` 
 
-```{r map_aus_deaths}
-ggplot() +
-  geom_polygon(data = aus_map_recent, 
-               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Deaths), 
-               color = "grey") +
-  theme_map() +
-  scale_fill_distiller(palette = "Purples", direction = 1) +
-  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
-        panel.background = element_rect(fill = "lightblue"),
-        legend.position = c(0.26, 0.2),
-        legend.direction = "horizontal",
-        legend.background = element_rect(fill = "lightblue")) +
-  ggtitle("Recent Cumulative Deaths Cases in Australia") +
-  geom_text(data = aus_map_recent, 
-            mapping = aes(x = Long,y = Lat, label = paste(State,":",Deaths)), 
-            size = 2)
+```{r aus_deaths}
+valueBox(prettyNum(aus_recent_sum$Deaths, big.mark = ","), icon = "ion-close-circled", color = '#d3d3d3')
 ```
 
+### `r paste0("Affected AUS States at ", aus_recent_sum$Date)` 
 
-Column {data-width=500 .tabset}
------------------------------------------------------------------------
+```{r affect_state}
+affect_state <- NROW(state_recent)
+valueBox(prettyNum(affect_state, big.mark = ","), icon = "ion-android-globe", color = '#835bd4')
+```
+
+```{r aus_first_case_day}
+aus_nz <- ts_aus %>% filter(Confirmed>0)
+aus_first_case_day <- min(aus_nz$Date)
+```
+
+### `r paste0("Days since First AUS Confirmed Case at ", aus_first_case_day)` 
+
+```{r aus_pass_day}
+current <- Sys.Date()
+aus_pass_day <- current - aus_first_case_day
+valueBox(prettyNum(aus_pass_day, big.mark = ","), icon = "ion-android-time", color = '#FFC300')
+```
 
 ```{r ts_aus_nz}
 state_code <- tibble(
@@ -398,7 +373,10 @@ ts_aus_nz <- ts_aus %>%
   left_join(state_code)
 ```
 
-### Animation of Case Increment
+Column {data-width=600 .tabset}
+-----------------------------------------------------------------------
+
+### Animation of AUS COVID-19 Case Increment by Day
 
 ```{r ts_increment_aus}
 ts_increment_aus_long <- ts_aus_nz %>%
@@ -431,14 +409,126 @@ animate_aus_increment <-
   geom_point(aes(size = Increment), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
-  labs(title = 'AUS Case Increment at Date: {frame_along}')
+  labs(title = 'AUS COVID-19 Case Increment at Date: {frame_along}')
 
-anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 180, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_aus_increment.gif)
 
-### Confirmed Cases
+### Search by State
+
+```{r table_state}
+state_recent %>%
+  select(Country, State, Date, Confirmed, Recovered, Deaths) %>%
+  arrange(desc(Confirmed)) %>%
+  datatable(
+    rownames = FALSE,
+    fillContainer = TRUE,
+    options = list(
+      bPaginate = FALSE)
+  )
+```
+
+
+State
+=======================================================================
+
+Column {data-width=500 .tabset}
+-----------------------------------------------------------------------
+
+```{r write_aus_map, eval=FALSE}
+aus_map <- read_rds(gzcon(url("https://biogeo.ucdavis.edu/data/gadm3.6/Rsf/gadm36_AUS_1_sf.rds"))) %>%
+  ms_simplify(keep = 0.01, keep_shapes = TRUE) %>%
+  fortify_sfc() %>%
+  filter(NAME_1 != "Ashmore and Cartier Islands" & 
+           NAME_1 != "Coral Sea Islands Territory" &
+           NAME_1 != "Jervis Bay Territory") %>%
+  select(NAME_1, polygon, long, lat) %>%
+  rename(State = NAME_1)
+write_csv(aus_map, "data/aus_map.csv")
+```
+
+```{r aus_map_recent}
+aus_map <- read_csv("data/aus_map.csv",
+                    col_types = cols(
+                      State = col_character(),
+                      polygon = col_double(),
+                      long = col_double(),
+                      lat = col_double()
+                    ))
+
+aus_map_recent <- aus_map %>%
+  left_join(ts_aus %>% filter(Date == max(Date)), by = "State") %>%
+  select(-Country)
+```
+
+### Map of AUS COVID-19 Confirmed Cases
+
+```{r map_aus_confirmed}
+ggplot() +
+  geom_polygon(data = aus_map_recent,
+               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Confirmed), 
+               color = "grey") +
+  geom_text() +
+  theme_map() +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "lightblue"),
+        legend.position = c(0.26, 0.2),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "lightblue")) +
+  ggtitle(paste0("AUS COVID-19 Confirmed Cases by Sate at ", recent_day)) +
+  geom_text(data = aus_map_recent, 
+            mapping = aes(x = Long,y = Lat, label = paste(State,":",Confirmed)), 
+            size = 2)
+```
+
+### AUS Recovered
+
+```{r map_aus_recovered}
+ggplot() +
+  geom_polygon(data = aus_map_recent, 
+               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Recovered), 
+               color = "grey") +
+  theme_map() +
+  scale_fill_distiller(palette = "Greens", direction = 1) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "lightblue"),
+        legend.position = c(0.26, 0.2),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "lightblue")) +
+  ggtitle(paste0("AUS COVID-19 Recovered Cases by Sate at ", recent_day)) +
+  geom_text(data = aus_map_recent, 
+            mapping = aes(x = Long,y = Lat, label = paste(State,":",Recovered)), 
+            size = 2)
+```
+
+### AUS Deaths
+
+```{r map_aus_deaths}
+ggplot() +
+  geom_polygon(data = aus_map_recent, 
+               mapping = aes(x = long, y = lat, group = interaction(State, polygon), fill = Deaths), 
+               color = "grey") +
+  theme_map() +
+  scale_fill_distiller(palette = "Purples", direction = 1) +
+  theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+        panel.background = element_rect(fill = "lightblue"),
+        legend.position = c(0.26, 0.2),
+        legend.direction = "horizontal",
+        legend.background = element_rect(fill = "lightblue")) +
+  ggtitle(paste0("AUS COVID-19 Deaths Cases by Sate at ", recent_day)) +
+  geom_text(data = aus_map_recent, 
+            mapping = aes(x = Long,y = Lat, label = paste(State,":",Deaths)), 
+            size = 2)
+```
+
+
+Column {data-width=500 .tabset}
+-----------------------------------------------------------------------
+
+### Animation of AUS COVID-19 Confirmed Cases
 
 ```{r animate_confirmed}
 animate_confirmed <- 
@@ -458,12 +548,12 @@ animate_confirmed <-
   transition_reveal(Date) +
   labs(title = 'AUS Cumulative Confirmed Cases at Date: {frame_along}')
 
-anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 150, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_confirmed.gif)
 
-### Recovered Cases
+### AUS Recovered
 
 ```{r animate_recovered}
 ts_aus_nz_recovered <- ts_aus_nz %>%
@@ -485,12 +575,12 @@ animate_recovered <-
   transition_reveal(Date) +
   labs(title = 'AUS Cumulative Recovered Cases at Date: {frame_along}')
 
-anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 150, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_recovered.gif)
 
-### Deaths Cases
+### AUS Deaths
 
 ```{r animate_deaths}
 ts_aus_nz_deaths <- ts_aus_nz %>%
@@ -511,7 +601,7 @@ animate_deaths <-
   transition_reveal(Date) +
   labs(title = 'AUS Cumulative Deaths Cases at Date: {frame_along}')
 
-anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 150, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_deaths.gif)
