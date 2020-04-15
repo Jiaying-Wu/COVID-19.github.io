@@ -289,7 +289,7 @@ animate_world_increment <-
   transition_reveal(Date) +
   labs(title = 'World Case Increment at Date: {frame_along}')
 
-#anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_world_increment.gif)
@@ -433,7 +433,7 @@ animate_aus_increment <-
   transition_reveal(Date) +
   labs(title = 'AUS Case Increment at Date: {frame_along}')
 
-#anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_aus_increment.gif)
@@ -458,7 +458,7 @@ animate_confirmed <-
   transition_reveal(Date) +
   labs(title = 'AUS Cumulative Confirmed Cases at Date: {frame_along}')
 
-#anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_confirmed.gif)
@@ -485,7 +485,7 @@ animate_recovered <-
   transition_reveal(Date) +
   labs(title = 'AUS Cumulative Recovered Cases at Date: {frame_along}')
 
-#anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_recovered.gif)
@@ -511,7 +511,7 @@ animate_deaths <-
   transition_reveal(Date) +
   labs(title = 'AUS Cumulative Deaths Cases at Date: {frame_along}')
 
-#anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 200, fps = 10, end_pause = 50))
+anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 200, fps = 10, end_pause = 50))
 ```
 
 ![](image/animate_deaths.gif)
