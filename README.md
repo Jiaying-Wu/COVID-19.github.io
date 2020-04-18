@@ -1,8 +1,8 @@
 
-Flex Dashboard for COVID-19 Outbreak Situation
-==============================================
+Dashboard for COVID-19 Outbreak Situation
+=========================================
 
-Link to the flex dashboard: <https://jiaying-wu.github.io/COVID-19.github.io/>
+Link to dashboard: <https://jiaying-wu.github.io/COVID-19.github.io/>
 
 Key Features
 ------------
