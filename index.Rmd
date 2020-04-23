@@ -3,6 +3,7 @@ title: "Coronavirus Disease (COVID-19) Dashboard"
 author: Jiaying Wu
 output: 
   flexdashboard::flex_dashboard:
+    storyboard: true
     orientation: columns
     vertical_layout: fill
     source_code: embed
@@ -70,12 +71,12 @@ ts_all <- ts_confirmed %>%
 
 # recent case by region
 region_recent <- ts_all %>%
-  filter(Date == max(Date)) %>%
   group_by(`Country/Region`, Date) %>%
   summarise(Confirmed = sum(Confirmed),
             Recovered = sum(Recovered),
-            Deaths = sum(Deaths))
-
+            Deaths = sum(Deaths)) %>%
+  mutate('New Case' = Confirmed - lag(Confirmed, 1)) %>%
+  filter(Date == max(Date))
 recent_day <- max(region_recent$Date)
 ```
 
@@ -89,7 +90,8 @@ ts_all_date <- ts_all %>%
   group_by(Date) %>%
   summarise(Confirmed = sum(Confirmed),
             Deaths = sum(Deaths),
-            Recovered = sum(Recovered))
+            Recovered = sum(Recovered)) %>%
+  mutate('New Case' = Confirmed - lag(Confirmed, 1))
 
 ts_recent <- ts_all_date %>%
   filter(Date == max(Date))
@@ -143,6 +145,12 @@ region_recent_code <- region_recent %>%
 valueBox(prettyNum(ts_recent$Confirmed, big.mark = ","), icon = "fa-users", color = "#C70039")
 ```
 
+### `r paste0("New Cases at ", ts_recent$Date)`
+
+```{r world_new}
+valueBox(prettyNum(ts_recent$`New Case`, big.mark = ","), icon = "fa-users", color = "#fc6b03")
+```
+
 ### `r paste0("Recovered Cases at ", ts_recent$Date)` 
 
 ```{r total_recovered}
@@ -153,13 +161,6 @@ valueBox(prettyNum(ts_recent$Recovered, big.mark = ","), icon = "ion-checkmark-c
 
 ```{r total_deaths}
 valueBox(prettyNum(ts_recent$Deaths, big.mark = ","), icon = "ion-close-circled", color = '#d3d3d3')
-```
-
-### `r paste0("Affected Country/Region at ", ts_recent$Date)` 
-
-```{r affect_region}
-affect_region <- NROW(region_recent_code)
-valueBox(prettyNum(affect_region, big.mark = ","), icon = "ion-android-globe", color = '#835bd4')
 ```
 
 ```{r first_case_day}
@@ -222,7 +223,7 @@ confirm_map_3d
 
 ```{r table_case}
 region_recent_code %>%
-  select(`Country/Region`,Code, Date, Confirmed, Recovered, Deaths) %>%
+  select(`Country/Region`,Code, Date, Confirmed, `New Case`, Recovered, Deaths) %>%
   arrange(desc(Confirmed)) %>%
   datatable(
     rownames = FALSE,
@@ -243,7 +244,7 @@ Column {data-width=500}
 
 ```{r barchart_cum}
 ts_date_long <- ts_all_date %>% 
-    select(-Confirmed) %>%
+    select(-c(Confirmed, `New Case`)) %>%
     pivot_longer(cols = -Date, names_to = "Status", values_to = "Cases")
 barchart <- ggplot(data = ts_all_date, aes(x = Date)) +
   geom_bar(aes(y = Confirmed), position = "stack", stat = "identity", fill = "#ff5050") +
@@ -270,6 +271,7 @@ Column {data-width=500}
 
 ```{r ts_increment}
 ts_increment_long <- ts_all_date %>%
+  select(-`New Case`) %>%
   mutate(Confirmed = Confirmed - lag(Confirmed,1),
             Deaths = Deaths - lag(Deaths,1),
             Recovered = Recovered - lag(Recovered,1)) %>%
@@ -287,14 +289,14 @@ animate_world_increment <-
   geom_text(aes(x = max(Date)+1, label = Case), hjust = 0) +
   theme_blog() +
   coord_cartesian(xlim = c(min(ts_increment_long$Date), max(ts_increment_long$Date)+7), clip = 'off') +
-  theme(legend.position = "none", axis.title.x = element_blank()) +
+  theme(legend.position = c(0.1, 0.8), axis.title.x = element_blank()) +
   guides(size = FALSE) + 
   geom_point(aes(size = Increment), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
   labs(title = 'World COVID-19 Case Increment at Date: {frame_along}')
 
-anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 200, fps = 10, end_pause = 50))
+#anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 150, fps = 10,renderer = gifski_renderer(loop = FALSE)))
 ```
 
 ![](image/animate_world_increment.gif)
@@ -310,15 +312,18 @@ Column {data-width=400 .bg-secondary}
 ts_aus <- ts_all %>%
   filter(`Country/Region` == "Australia") %>%
   rename(State = `Province/State`,
-         Country = `Country/Region`)
+         Country = `Country/Region`)  %>%
+  mutate('New Case' = Confirmed - lag(Confirmed, 1))
 
 aus_recent_sum <- ts_aus %>%
   filter(Date == max(Date)) %>%
   group_by(Country) %>%
   summarise(Date = max(Date),
             Confirmed = sum(Confirmed),
+            'New Case' = sum(`New Case`),
             Recovered = sum(Recovered),
             Deaths = sum(Deaths))
+  
 state_recent <- ts_aus %>%
   filter(Date == max(Date))
 ```
@@ -327,6 +332,12 @@ state_recent <- ts_aus %>%
 
 ```{r aus_confirmed}
 valueBox(prettyNum(aus_recent_sum$Confirmed, big.mark = ","), icon = "fa-users", color = "#C70039")
+```
+
+### `r paste0("New AUS Cases at ", aus_recent_sum$Date)` 
+
+```{r aus_new}
+valueBox(prettyNum(aus_recent_sum$`New Case`, big.mark = ","), icon = "fa-users", color = "#fc6b03")
 ```
 
 ### `r paste0("AUS Recovered Cases at ", aus_recent_sum$Date)` 
@@ -339,13 +350,6 @@ valueBox(prettyNum(aus_recent_sum$Recovered, big.mark = ","), icon = "ion-checkm
 
 ```{r aus_deaths}
 valueBox(prettyNum(aus_recent_sum$Deaths, big.mark = ","), icon = "ion-close-circled", color = '#d3d3d3')
-```
-
-### `r paste0("Affected AUS States at ", aus_recent_sum$Date)` 
-
-```{r affect_state}
-affect_state <- NROW(state_recent)
-valueBox(prettyNum(affect_state, big.mark = ","), icon = "ion-android-globe", color = '#835bd4')
 ```
 
 ```{r aus_first_case_day}
@@ -404,14 +408,14 @@ animate_aus_increment <-
   geom_text(aes(x = max(Date)+1, label = Case), hjust = 0) +
   theme_blog() +
   coord_cartesian(xlim = c(min(ts_increment_aus_long$Date), max(ts_increment_aus_long$Date)+7), clip = 'off') +
-  theme(legend.position = "none", axis.title.x = element_blank()) +
+  theme(legend.position = c(0.1, 0.8), axis.title.x = element_blank()) +
   guides(size = FALSE) + 
   geom_point(aes(size = Increment), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Case Increment at Date: {frame_along}')
 
-anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 180, fps = 10, end_pause = 50))
+anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 100, fps = 10, renderer = gifski_renderer(loop = FALSE)))
 ```
 
 ![](image/animate_aus_increment.gif)
@@ -420,7 +424,7 @@ anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_inc
 
 ```{r table_state}
 state_recent %>%
-  select(Country, State, Date, Confirmed, Recovered, Deaths) %>%
+  select(Country, State, Date, Confirmed, `New Case`, Recovered, Deaths) %>%
   arrange(desc(Confirmed)) %>%
   datatable(
     rownames = FALSE,
@@ -541,14 +545,14 @@ animate_confirmed <-
   geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
   theme_blog() +
   coord_cartesian(clip = 'off') +
-  theme(legend.position = "none", axis.title.x = element_blank()) +
+  theme(legend.position = c(0.1, 0.7), axis.title.x = element_blank()) +
   guides(size = FALSE) + 
   geom_point(aes(size = Confirmed), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Confirmed Cases at Date: {frame_along}')
 
-anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 150, fps = 10, end_pause = 50))
+anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE)))
 ```
 
 ![](image/animate_confirmed.gif)
@@ -568,14 +572,14 @@ animate_recovered <-
   geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
   theme_blog() +
   coord_cartesian(clip = 'off') +
-  theme(legend.position = "none", axis.title.x = element_blank()) +
+  theme(legend.position = c(0.1, 0.7), axis.title.x = element_blank()) +
   guides(size = FALSE) + 
   geom_point(aes(size = Recovered), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Recovered Cases at Date: {frame_along}')
 
-anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 150, fps = 10, end_pause = 50))
+anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE)))
 ```
 
 ![](image/animate_recovered.gif)
@@ -594,14 +598,14 @@ animate_deaths <-
   geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
   theme_blog() +
   coord_cartesian(clip = 'off') +
-  theme(legend.position = "none", axis.title.x = element_blank()) +
+  theme(legend.position = c(0.1, 0.7), axis.title.x = element_blank()) +
   guides(size = FALSE) + 
   geom_point(aes(size = Deaths), alpha = 0.7) +
   scale_size(range = c(2, 10)) +
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Deaths Cases at Date: {frame_along}')
 
-anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 150, fps = 10, end_pause = 50))
+anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE)))
 ```
 
 ![](image/animate_deaths.gif)
