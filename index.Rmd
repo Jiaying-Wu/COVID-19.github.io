@@ -3,7 +3,6 @@ title: "Coronavirus Disease (COVID-19) Dashboard"
 author: Jiaying Wu
 output: 
   flexdashboard::flex_dashboard:
-    storyboard: true
     orientation: columns
     vertical_layout: fill
     source_code: embed
@@ -296,7 +295,7 @@ animate_world_increment <-
   transition_reveal(Date) +
   labs(title = 'World COVID-19 Case Increment at Date: {frame_along}')
 
-#anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 150, fps = 10,renderer = gifski_renderer(loop = FALSE)))
+anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 150, fps = 10,renderer = gifski_renderer(loop = FALSE)))
 ```
 
 ![](image/animate_world_increment.gif)
