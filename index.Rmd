@@ -11,17 +11,26 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+# dashboard
 library(flexdashboard)
-library(tidyverse)
-library(lubridate)
-library(plotly)
-library(ggthemes)
 library(knitr)
 library(DT)
+
+# theme
+library(ggthemes)
+library(brotools)
+
+# data wrangling
+library(tidyverse)
+library(lubridate)
+
+# data visualization
+library(plotly)
+library(gganimate)
+
+# map
 library(rmapshaper)
 library(sugarbag)
-library(gganimate)
-library(brotools)
 ```
 
 World
@@ -295,10 +304,8 @@ animate_world_increment <-
   transition_reveal(Date) +
   labs(title = 'World COVID-19 Case Increment at Date: {frame_along}')
 
-anim_save("image/animate_world_increment.gif", animation = animate(animate_world_increment, nframes = 150, fps = 10,renderer = gifski_renderer(loop = FALSE)))
+animate(animate_world_increment, nframes = 150, fps = 10,renderer = gifski_renderer(loop = FALSE))
 ```
-
-![](image/animate_world_increment.gif)
 
 
 Australia
@@ -414,10 +421,9 @@ animate_aus_increment <-
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Case Increment at Date: {frame_along}')
 
-anim_save("image/animate_aus_increment.gif", animation = animate(animate_aus_increment, nframes = 100, fps = 10, renderer = gifski_renderer(loop = FALSE)))
+animate(animate_aus_increment, nframes = 100, fps = 10, renderer = gifski_renderer(loop = FALSE))
 ```
 
-![](image/animate_aus_increment.gif)
 
 ### Search by State
 
@@ -551,10 +557,9 @@ animate_confirmed <-
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Confirmed Cases at Date: {frame_along}')
 
-anim_save("image/animate_confirmed.gif", animation = animate(animate_confirmed, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE)))
+animate(animate_confirmed, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE))
 ```
 
-![](image/animate_confirmed.gif)
 
 ### AUS Recovered
 
@@ -578,10 +583,9 @@ animate_recovered <-
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Recovered Cases at Date: {frame_along}')
 
-anim_save("image/animate_recovered.gif", animation = animate(animate_recovered, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE)))
+animate(animate_recovered, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE))
 ```
 
-![](image/animate_recovered.gif)
 
 ### AUS Deaths
 
@@ -604,10 +608,9 @@ animate_deaths <-
   transition_reveal(Date) +
   labs(title = 'AUS COVID-19 Deaths Cases at Date: {frame_along}')
 
-anim_save("image/animate_deaths.gif", animation = animate(animate_deaths, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE)))
+animate(animate_deaths, nframes = 120, fps = 10, renderer = gifski_renderer(loop = FALSE))
 ```
 
-![](image/animate_deaths.gif)
 
 Sources
 =======================================================================
