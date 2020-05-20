@@ -292,11 +292,13 @@ animate_world_increment <-
   ggplot(data = ts_increment_long, 
          mapping = aes(x = Date, y = Increment, group = Case, color = Case)) +
   geom_line() +
-  scale_color_brewer(palette = "Set3") +
+  scale_color_manual(values = c("yellow", "#d3d3d3", "#3FBF7F")) +
   geom_segment(aes(xend = max(Date)+1, yend = Increment), linetype = 2, colour = 'grey') +
   geom_text(aes(x = max(Date)+1, label = Case), hjust = 0) +
   theme_blog() +
-  coord_cartesian(xlim = c(min(ts_increment_long$Date), max(ts_increment_long$Date)+7), clip = 'off') +
+  coord_cartesian(xlim = c(min(ts_increment_long$Date), max(ts_increment_long$Date)+7), 
+                  ylim = c(max(0, min(ts_increment_long$Increment)), max(ts_increment_long$Increment)),
+                  clip = 'off') +
   theme(legend.position = c(0.1, 0.8), axis.title.x = element_blank()) +
   guides(size = FALSE) + 
   geom_point(aes(size = Increment), alpha = 0.7) +
@@ -409,7 +411,7 @@ animate_aus_increment <-
   ggplot(data = ts_increment_aus_long, 
          mapping = aes(x = Date, y = Increment, group = Case, color = Case)) +
   geom_line() +
-  scale_color_brewer(palette = "Set3") +
+  scale_color_manual(values = c("yellow", "#d3d3d3", "#3FBF7F")) +
   geom_segment(aes(xend = max(Date)+1, yend = Increment), linetype = 2, colour = 'grey') +
   geom_text(aes(x = max(Date)+1, label = Case), hjust = 0) +
   theme_blog() +
@@ -545,7 +547,7 @@ animate_confirmed <-
          mapping = aes(x = Date, y = Confirmed, group = State, color = State)) +
   geom_line() +
   scale_color_brewer(palette = "Set3") +
-  scale_y_log10() +
+  #scale_y_log10() +
   geom_segment(aes(xend = max(Date)+1, yend = Confirmed), linetype = 2, colour = 'grey') +
   geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
   theme_blog() +
@@ -571,7 +573,7 @@ animate_recovered <-
          mapping = aes(x = Date, y = Recovered, group = State, color = State)) +
   geom_line() +
   scale_color_brewer(palette = "Set3") +
-  scale_y_log10() +
+  #scale_y_log10() +
   geom_segment(aes(xend = max(Date)+1, yend = Recovered), linetype = 2, colour = 'grey') +
   geom_text(aes(x = max(Date)+1, label = State), hjust = 0) +
   theme_blog() +
