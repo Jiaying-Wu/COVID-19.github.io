@@ -190,10 +190,10 @@ Column {data-width=600 .tabset}
 ### World COVID-19 Confirmed Cases by Region
 
 ```{r set_map}
-#Set country boundaries as light grey
+# Set country boundaries as light grey
 line <- list(color = toRGB("#d1d1d1"), width = 0.2)
 
-#Specify map projection and options
+# Specify map projection and options
 geo <- list(
      showframe = FALSE,
      showcoastlines = FALSE,
@@ -208,7 +208,6 @@ geo <- list(
      showrivers = TRUE,
      rivercolor = '#99c0db',
      bgcolor = '#e8f7fc')
-
 ```
 
 ```{r confirm_map_3d}
@@ -292,6 +291,7 @@ animate_world_increment <-
   ggplot(data = ts_increment_long, 
          mapping = aes(x = Date, y = Increment, group = Case, color = Case)) +
   geom_line() +
+  scale_y_continuous(labels = scales::label_number_si(accuracy = 1)) +
   scale_color_manual(values = c("yellow", "#d3d3d3", "#3FBF7F")) +
   geom_segment(aes(xend = max(Date)+1, yend = Increment), linetype = 2, colour = 'grey') +
   geom_text(aes(x = max(Date)+1, label = Case), hjust = 0) +
