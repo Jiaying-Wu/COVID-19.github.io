@@ -257,7 +257,7 @@ barchart <- ggplot(data = ts_all_date, aes(x = Date)) +
   geom_bar(aes(y = Confirmed), position = "stack", stat = "identity", fill = "#ff5050") +
   geom_bar(data = ts_date_long, aes(y = Cases, fill = Status), position = "stack", stat = "identity") +
   scale_fill_manual(values = c("#000000", "#009900")) +
-  scale_y_continuous(labels = scales::label_number_si(accuracy = 0.1)) +
+  scale_y_continuous(labels = scales::label_number_si(accuracy = 1)) +
   theme_solarized(base_size = 10, light = TRUE)+
   theme(plot.margin = margin(0, 0, 0, 0, "pt"),
         panel.background = element_rect(fill = "White"),
