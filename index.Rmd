@@ -18,6 +18,7 @@ library(DT)
 
 # theme
 library(ggthemes)
+#devtools::install_github("b-rodrigues/brotools")
 library(brotools)
 
 # data wrangling
@@ -30,6 +31,7 @@ library(gganimate)
 
 # map
 library(rmapshaper)
+#remotes::install_github("srkobakian/sugarbag")
 library(sugarbag)
 ```
 
