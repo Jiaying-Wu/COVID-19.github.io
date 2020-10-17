@@ -41,34 +41,19 @@ World
 ```{r time_series}
 # time series of confirmed cases in each area
 ts_confirmed <- read_csv(
-  file = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv",
-  col_types = cols(
-    .default = col_double(),
-    `Province/State` = col_character(),
-    `Country/Region` = col_character()
-  )) %>%
+  file = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") %>%
   pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), names_to = "Date", values_to = "Confirmed") %>%
   mutate(Date = mdy(Date))
 
 # time series of recovered cases in each area
 ts_recovered <- read_csv(
-  file = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv",
-  col_types = cols(
-    .default = col_double(),
-    `Province/State` = col_character(),
-    `Country/Region` = col_character()
-  )) %>%
+  file = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv") %>%
   pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), names_to = "Date", values_to = "Recovered") %>%
   mutate(Date = mdy(Date))
 
 # time series of deaths cases in each area
 ts_deaths <- read_csv(
-  file = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",
-  col_types = cols(
-    .default = col_double(),
-    `Province/State` = col_character(),
-    `Country/Region` = col_character()
-  )) %>%
+  file = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv") %>%
   pivot_longer(cols = -c(`Province/State`, `Country/Region`, Lat, Long), names_to = "Date", values_to = "Deaths") %>%
   mutate(Date = mdy(Date))
 
