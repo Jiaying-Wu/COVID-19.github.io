@@ -75,7 +75,7 @@ region_recent <- ts_all %>%
 recent_day <- max(region_recent$Date)
 ```
 
-Column {data-width=400 .bg-secondary}
+Column {data-width=390 .bg-secondary}
 -----------------------------------------------------------------------
 
 ```{r total_summary_cases}
@@ -134,25 +134,25 @@ region_recent_code <- region_recent %>%
   arrange(desc(Confirmed))
 ```
 
-### `r paste0("Confirmed Cases at ", ts_recent$Date)` 
+### `r paste0("Confirmed cases at ", ts_recent$Date)` 
 
 ```{r total_confirmed}
 valueBox(prettyNum(ts_recent$Confirmed, big.mark = ","), icon = "fa-users", color = "#C70039")
 ```
 
-### `r paste0("New Cases at ", ts_recent$Date)`
+### `r paste0("New cases at ", ts_recent$Date)`
 
 ```{r world_new}
 valueBox(prettyNum(ts_recent$`New Case`, big.mark = ","), icon = "fa-users", color = "#fc6b03")
 ```
 
-### `r paste0("Recovered Cases at ", ts_recent$Date)` 
+### `r paste0("Recovered cases at ", ts_recent$Date)` 
 
 ```{r total_recovered}
 valueBox(prettyNum(ts_recent$Recovered, big.mark = ","), icon = "ion-checkmark-circled", color = '#3FBF7F')
 ```
 
-### `r paste0("Deaths Cases at ", ts_recent$Date)` 
+### `r paste0("Deaths cases at ", ts_recent$Date)` 
 
 ```{r total_deaths}
 valueBox(prettyNum(ts_recent$Deaths, big.mark = ","), icon = "ion-close-circled", color = '#d3d3d3')
@@ -163,7 +163,7 @@ case_nz <- ts_all %>% filter(Confirmed>0)
 first_case_day <- min(case_nz$Date)
 ```
 
-### `r paste0("Days since First Confirmed Case at ", first_case_day)` 
+### `r paste0("Since first confirmed case at ", first_case_day)` 
 
 ```{r pass_day}
 current <- Sys.Date()
@@ -171,7 +171,7 @@ pass_day <- current - first_case_day
 valueBox(prettyNum(pass_day, big.mark = ","), icon = "ion-android-time", color = '#FFC300')
 ```
 
-Column {data-width=600 .tabset}
+Column {data-width=610 .tabset}
 -----------------------------------------------------------------------
 
 ### World COVID-19 Confirmed Cases by Region
