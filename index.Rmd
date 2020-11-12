@@ -75,7 +75,7 @@ region_recent <- ts_all %>%
 recent_day <- max(region_recent$Date)
 ```
 
-Column {data-width=390 .bg-secondary}
+Column {data-width=380 .bg-secondary}
 -----------------------------------------------------------------------
 
 ```{r total_summary_cases}
@@ -171,7 +171,7 @@ pass_day <- current - first_case_day
 valueBox(prettyNum(pass_day, big.mark = ","), icon = "ion-android-time", color = '#FFC300')
 ```
 
-Column {data-width=610 .tabset}
+Column {data-width=620 .tabset}
 -----------------------------------------------------------------------
 
 ### World COVID-19 Confirmed Cases by Region
@@ -283,7 +283,7 @@ animate_world_increment <-
   geom_segment(aes(xend = max(Date)+1, yend = Increment), linetype = 2, colour = 'grey') +
   geom_text(aes(x = max(Date)+1, label = Case), hjust = 0) +
   theme_blog() +
-  coord_cartesian(xlim = c(min(ts_increment_long$Date), max(ts_increment_long$Date)+7), 
+  coord_cartesian(xlim = c(min(ts_increment_long$Date), max(ts_increment_long$Date)+15), 
                   ylim = c(max(0, min(ts_increment_long$Increment)), max(ts_increment_long$Increment)),
                   clip = 'off') +
   theme(legend.position = c(0.1, 0.8), axis.title.x = element_blank()) +
@@ -323,25 +323,25 @@ state_recent <- ts_aus %>%
   filter(Date == max(Date))
 ```
 
-### `r paste0("AUS Confirmed Cases at ", aus_recent_sum$Date)` 
+### `r paste0("AUS confirmed cases at ", aus_recent_sum$Date)` 
 
 ```{r aus_confirmed}
 valueBox(prettyNum(aus_recent_sum$Confirmed, big.mark = ","), icon = "fa-users", color = "#C70039")
 ```
 
-### `r paste0("New AUS Cases at ", aus_recent_sum$Date)` 
+### `r paste0("New AUS cases at ", aus_recent_sum$Date)` 
 
 ```{r aus_new}
 valueBox(prettyNum(aus_recent_sum$`New Case`, big.mark = ","), icon = "fa-users", color = "#fc6b03")
 ```
 
-### `r paste0("AUS Recovered Cases at ", aus_recent_sum$Date)` 
+### `r paste0("AUS recovered Cases at ", aus_recent_sum$Date)` 
 
 ```{r aus_recovered}
 valueBox(prettyNum(aus_recent_sum$Recovered, big.mark = ","), icon = "ion-checkmark-circled", color = '#3FBF7F')
 ```
 
-### `r paste0("AUS Deaths Cases at ", aus_recent_sum$Date)` 
+### `r paste0("AUS deaths cases at ", aus_recent_sum$Date)` 
 
 ```{r aus_deaths}
 valueBox(prettyNum(aus_recent_sum$Deaths, big.mark = ","), icon = "ion-close-circled", color = '#d3d3d3')
@@ -352,7 +352,7 @@ aus_nz <- ts_aus %>% filter(Confirmed>0)
 aus_first_case_day <- min(aus_nz$Date)
 ```
 
-### `r paste0("Days since First AUS Confirmed Case at ", aus_first_case_day)` 
+### `r paste0("Since first AUS confirmed case at ", aus_first_case_day)` 
 
 ```{r aus_pass_day}
 current <- Sys.Date()
